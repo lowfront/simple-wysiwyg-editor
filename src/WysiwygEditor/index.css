@@ -1,0 +1,9 @@
+.wysiwyg-editor {
+  padding: 10px;
+  box-shadow: 0 0 0 1px #ccc;
+}
+
+.wysiwyg-editor p {
+  margin: 0;
+  height: 1em;
+}
