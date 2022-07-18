@@ -174,6 +174,10 @@ namespace Transform {
     }
   }
 
+  
+  export function pasteTransform(input: HTMLElement, ev: ClipboardEvent) {
+    ev.preventDefault();
+
   const START_FRAGMENT = '<!--StartFragment-->';
   const END_FRAGMENT = '<!--EndFragment-->';
   
@@ -213,8 +217,6 @@ namespace Transform {
     } as PasteStackItem;
   }
 
-  export function pasteTransform(input: HTMLElement, ev: ClipboardEvent) {
-    ev.preventDefault();
     const htmlData = ev.clipboardData!.getData('text/html');
     const startIndex = htmlData.indexOf(START_FRAGMENT) + START_FRAGMENT.length;
     const endIndex = htmlData.indexOf(END_FRAGMENT);
