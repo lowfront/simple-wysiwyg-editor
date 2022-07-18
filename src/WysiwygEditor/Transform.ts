@@ -272,7 +272,7 @@ namespace Transform {
     })
   }
 
-  export function deepSplitText(parent: Node, node: Node, offset: number) {
+  export function deepSplitText(root: Node, node: Node, offset: number) {
     const { node: targetText, offset: offsetText } = Parser.getDeepOffsetText(node, offset);
 
     const splitedText = (targetText as Text).splitText(offsetText);
@@ -280,7 +280,7 @@ namespace Transform {
 
     let clonedParent: Node|null = null;
     // FIXME: splitedText.data가 없고 자식이 하나도 없으면 clonedParent를 생성하지 않아야 함
-    while (target.parentNode !== parent) {
+    while (target.parentNode !== root) {
       // 부모 복제가 일어나면 이전 부모 append
       if (clonedParent) {
         const clone = target.parentNode!.cloneNode(false);
@@ -316,16 +316,16 @@ namespace Transform {
       result.push(targetSibling);
       targetSibling = targetSibling.nextSibling;
     }
-
+    console.log(targetSibling, result);
     if (!targetText.length) {
       const currentParent = targetText.parentNode!;
       targetText.remove();
-      removeIfEmpty(parent, currentParent);
+      removeIfEmpty(root, currentParent);
     }
     if (!splitedText.length) {
       const currentParent = targetText.parentNode!;
       splitedText.remove();
-      removeIfEmpty(parent, currentParent);
+      removeIfEmpty(root, currentParent);
       // if (result.includes(splitedText)) {
       //   result.splice(result.indexOf(splitedText), 1);
       // }
