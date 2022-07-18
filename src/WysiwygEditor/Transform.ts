@@ -178,44 +178,44 @@ namespace Transform {
   export function pasteTransform(input: HTMLElement, ev: ClipboardEvent) {
     ev.preventDefault();
 
-  const START_FRAGMENT = '<!--StartFragment-->';
-  const END_FRAGMENT = '<!--EndFragment-->';
+    const START_FRAGMENT = '<!--StartFragment-->';
+    const END_FRAGMENT = '<!--EndFragment-->';
+    
+    const blockTags = ['DIV', 'P', 'SECTION', 'MAIN', 'ARTICLE', 'BR'];
   
-  const blockTags = ['DIV', 'P', 'SECTION', 'MAIN', 'ARTICLE', 'BR'];
-
-  type PasteStackItem =
-  | {
-    type: 'text',
-    node: Node;
-    i: boolean;
-    u: boolean;
-    b: boolean;
-    block: boolean;
-    color: string;
-  } 
-  | {
-    type: 'group',
-    node: Node;
-    i: boolean;
-    u: boolean;
-    b: boolean;
-    block: boolean;
-    color: string;
-  };  
-
-  function nodeToStackItem(node: Node, parentStackItem: Partial<PasteStackItem> = {}) {
-    const block = blockTags.includes((node as HTMLElement).tagName);
+    type PasteStackItem =
+    | {
+      type: 'text',
+      node: Node;
+      i: boolean;
+      u: boolean;
+      b: boolean;
+      block: boolean;
+      color: string;
+    } 
+    | {
+      type: 'group',
+      node: Node;
+      i: boolean;
+      u: boolean;
+      b: boolean;
+      block: boolean;
+      color: string;
+    };  
   
-    return {
-      type: node.nodeType === 1 ? 'group' : 'text',
-      node,
-      i: parentStackItem.i ?? false,
-      u: parentStackItem.u ?? false,
-      b: parentStackItem.b ?? false,
-      block,
-      color: (node as HTMLElement).style?.color ?? (parentStackItem.color ?? ''),
-    } as PasteStackItem;
-  }
+    function nodeToStackItem(node: Node, parentStackItem: Partial<PasteStackItem> = {}) {
+      const block = blockTags.includes((node as HTMLElement).tagName);
+    
+      return {
+        type: node.nodeType === 1 ? 'group' : 'text',
+        node,
+        i: parentStackItem.i ?? false,
+        u: parentStackItem.u ?? false,
+        b: parentStackItem.b ?? false,
+        block,
+        color: (node as HTMLElement).style?.color ?? (parentStackItem.color ?? ''),
+      } as PasteStackItem;
+    }
 
     const htmlData = ev.clipboardData!.getData('text/html');
     const startIndex = htmlData.indexOf(START_FRAGMENT) + START_FRAGMENT.length;
@@ -247,7 +247,32 @@ namespace Transform {
       }
     }
     console.log(result);
+
+    if (!result.length) return;
+
+    const firstParagraph = result[0];
+    const lastParagraph = result[result.length - 1];
   
+    const selection = Editor.getSelection();
+    const { anchorNode, anchorOffset } = selection;
+    const paragraph = Parser.getCurrentParagraph(input, anchorNode);
+    
+    if (firstParagraph === lastParagraph) {
+      const splitedResult = deepSplitText(paragraph, anchorNode, anchorOffset);
+      const firstSplitedNode = splitedResult.find(node => node.nodeValue);
+
+      if (firstSplitedNode) {
+        firstParagraph.forEach(({ node }) => paragraph.insertBefore(node, firstSplitedNode));
+      } else {
+        firstParagraph.forEach(({ node }) => paragraph.appendChild(node));
+      }
+
+      if (firstParagraph.length) {
+        const { node: lastNode } = firstParagraph[firstParagraph.length - 1];
+        if (isText(lastNode)) Editor.focus(lastNode, lastNode.data.length);
+      }
+    }
+
     // let resultHTML = '';
     // for (const item of result) {
     //   const div = document.createElement('div');
