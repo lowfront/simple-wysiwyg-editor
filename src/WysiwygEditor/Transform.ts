@@ -204,6 +204,8 @@ namespace Transform {
     };  
   
     // FIXME: 복사된 텍스트에 포함된 링크 자동 변환
+    // FIXME: 연속 붙여넣기시 작동하지 않음
+    // FIXME: 내용없이 붙여넣기시 작동하지 않음
     function nodeToStackItem(node: Node, parentStackItem: Partial<PasteStackItem> = {}) {
       const block = blockTags.includes((node as HTMLElement).tagName);
     
