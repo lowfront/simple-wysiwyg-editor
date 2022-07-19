@@ -203,6 +203,7 @@ namespace Transform {
       color: string;
     };  
   
+    // FIXME: 복사된 텍스트에 포함된 링크 자동 변환
     function nodeToStackItem(node: Node, parentStackItem: Partial<PasteStackItem> = {}) {
       const block = blockTags.includes((node as HTMLElement).tagName);
     
@@ -257,7 +258,7 @@ namespace Transform {
     const { anchorNode, anchorOffset } = selection;
     const paragraph = Parser.getCurrentParagraph(input, anchorNode);
     
-    if (firstParagraph === lastParagraph) {
+    if (firstParagraph === lastParagraph) { // 한줄 붙여넣기
       const splitedResult = deepSplitText(paragraph, anchorNode, anchorOffset);
       const firstSplitedNode = splitedResult.find(node => node.nodeValue);
 
@@ -271,18 +272,29 @@ namespace Transform {
         const { node: lastNode } = firstParagraph[firstParagraph.length - 1];
         if (isText(lastNode)) Editor.focus(lastNode, lastNode.data.length);
       }
-    }
+    } else { // 여러줄 붙여넣기
+      const splitedResult = deepSplitText(paragraph, anchorNode, anchorOffset);
+      // const firstSplitedNode = splitedResult.find(node => node.nodeValue);
 
-    // let resultHTML = '';
-    // for (const item of result) {
-    //   const div = document.createElement('div');
-    //   for (const { node, color } of item) {
-    //     const span = Object.assign(document.createElement('span'), {});//, { style: `color: ${color}` });
-    //     span.appendChild(node);
-    //     div.appendChild(span);
-    //   }
-    //   resultHTML += div.outerHTML;
-    // }
+      for (const node of splitedResult) {
+        paragraph.removeChild(node);
+      }
+
+      let targetParagraph = paragraph;
+      result.forEach((textNodes, i, { length }) => {
+        // 빈 줄 br제거
+        if ([...targetParagraph.childNodes].length === 1 && textNodes.length && isHTML(targetParagraph.firstChild, 'br')) targetParagraph.removeChild(targetParagraph.firstChild);
+        
+        textNodes.forEach(({ node }) => targetParagraph.appendChild(node));
+        if (length - 1 !== i) targetParagraph = Editor.appendParagraph(input, '', [...input.childNodes].indexOf(targetParagraph) + 1);
+      });
+
+      const deepFocusOffset = targetParagraph.textContent!.length;
+      for (const node of splitedResult) {
+        targetParagraph.appendChild(node);
+      }
+      Editor.deepFocus(targetParagraph, deepFocusOffset);
+    }
   }
 
   export function cleanEmpty(input: HTMLElement) {
