@@ -222,3 +222,7 @@ export function validAnchorElement(anchorElement: HTMLAnchorElement) {
     anchorParent.removeChild(anchorElement);
   }
 }
+
+export function isEmptyParagraph(paragraph: HTMLElement) {
+  return [...paragraph.childNodes].length === 1 && isHTML(paragraph.firstChild, 'br')
+}
