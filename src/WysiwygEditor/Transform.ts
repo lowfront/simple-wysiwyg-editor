@@ -174,7 +174,9 @@ namespace Transform {
     }
   }
 
-  
+  // FIXME: 복사된 텍스트에 포함된 링크 자동 변환
+  // FIXME: 연속 붙여넣기시 작동하지 않음
+  // FIXME: text/plain 파서 추가
   export function pasteTransform(input: HTMLElement, ev: ClipboardEvent) {
     ev.preventDefault();
 
@@ -203,8 +205,6 @@ namespace Transform {
       color: string;
     };  
   
-    // FIXME: 복사된 텍스트에 포함된 링크 자동 변환
-    // FIXME: 연속 붙여넣기시 작동하지 않음
     function nodeToStackItem(node: Node, parentStackItem: Partial<PasteStackItem> = {}) {
       const block = blockTags.includes((node as HTMLElement).tagName);
     
@@ -219,11 +219,11 @@ namespace Transform {
       } as PasteStackItem;
     }
 
-    const htmlData = ev.clipboardData!.getData('text/html');
+    const htmlData = ev.clipboardData!.getData('text/html') || ev.clipboardData!.getData('text/plain');
     const startIndex = htmlData.indexOf(START_FRAGMENT) + START_FRAGMENT.length;
     const endIndex = htmlData.indexOf(END_FRAGMENT);
     const wrap = document.createElement('div');
-
+    console.log('htmlData', htmlData);
     // FIXME: 최대 개수 제한 필요
     wrap.innerHTML = htmlData.slice(startIndex, endIndex);
   
