@@ -1,6 +1,6 @@
 import Editor from "./Editor";
 import Parser from "./Parser";
-import { findPreviousSiblingDeep, getChildNodes, getLastChildNode, getWrappedInTag, insertAfter, isHTML, isText, isWrappedInTag, previousSiblingTextDeep, RegexHttp, removeIfEmpty, validAnchorElement } from "./utils";
+import { findPreviousSiblingDeep, getChildNodes, getWrappedInTag, insertAfter, isEmptyParagraph, isHTML, isText, isWrappedInTag, previousSiblingTextDeep, RegexHttp, removeIfEmpty, validAnchorElement } from "./utils";
 
 namespace Transform {
   export function initWrap(input: HTMLElement) {
@@ -205,7 +205,6 @@ namespace Transform {
   
     // FIXME: 복사된 텍스트에 포함된 링크 자동 변환
     // FIXME: 연속 붙여넣기시 작동하지 않음
-    // FIXME: 내용없이 붙여넣기시 작동하지 않음
     function nodeToStackItem(node: Node, parentStackItem: Partial<PasteStackItem> = {}) {
       const block = blockTags.includes((node as HTMLElement).tagName);
     
@@ -257,9 +256,14 @@ namespace Transform {
     const lastParagraph = result[result.length - 1];
   
     const selection = Editor.getSelection();
-    const { anchorNode, anchorOffset } = selection;
+    let { anchorNode, anchorOffset } = selection;
     const paragraph = Parser.getCurrentParagraph(input, anchorNode);
     
+    if (isEmptyParagraph(paragraph)) {
+      anchorNode = document.createTextNode('');
+      paragraph.appendChild(anchorNode);
+    }
+
     if (firstParagraph === lastParagraph) { // 한줄 붙여넣기
       const splitedResult = deepSplitText(paragraph, anchorNode, anchorOffset);
       const firstSplitedNode = splitedResult.find(node => node.nodeValue);
@@ -276,10 +280,9 @@ namespace Transform {
       }
     } else { // 여러줄 붙여넣기
       const splitedResult = deepSplitText(paragraph, anchorNode, anchorOffset);
-      // const firstSplitedNode = splitedResult.find(node => node.nodeValue);
 
       for (const node of splitedResult) {
-        paragraph.removeChild(node);
+        if (node.parentNode === paragraph) paragraph.removeChild(node);
       }
 
       let targetParagraph = paragraph;
