@@ -174,12 +174,7 @@ namespace Transform {
     }
   }
 
-  // FIXME: 복사된 텍스트에 포함된 링크 자동 변환
-  // FIXME: 연속 붙여넣기시 작동하지 않음
-  // FIXME: text/plain 파서 추가
-  export function pasteTransform(input: HTMLElement, ev: ClipboardEvent) {
-    ev.preventDefault();
-
+  function htmlPasteParse(input: HTMLElement, ev: ClipboardEvent, htmlData: string) {
     const START_FRAGMENT = '<!--StartFragment-->';
     const END_FRAGMENT = '<!--EndFragment-->';
     
@@ -219,7 +214,6 @@ namespace Transform {
       } as PasteStackItem;
     }
 
-    const htmlData = ev.clipboardData!.getData('text/html') || ev.clipboardData!.getData('text/plain');
     const startIndex = htmlData.indexOf(START_FRAGMENT) + START_FRAGMENT.length;
     const endIndex = htmlData.indexOf(END_FRAGMENT);
     const wrap = document.createElement('div');
@@ -300,6 +294,23 @@ namespace Transform {
       }
       Editor.deepFocus(targetParagraph, deepFocusOffset);
     }
+  }
+
+  function textPasteParse(input: HTMLElement, ev: ClipboardEvent, textData: string) {
+
+  }
+
+  // FIXME: 복사된 텍스트에 포함된 링크 자동 변환
+  // FIXME: 연속 붙여넣기시 작동하지 않음
+  // FIXME: text/plain 파서 추가
+  export function pasteTransform(input: HTMLElement, ev: ClipboardEvent) {
+    ev.preventDefault();
+
+    const htmlData = ev.clipboardData!.getData('text/html');
+    if (htmlData) return htmlPasteParse(input, ev, htmlData);
+
+    const textData = ev.clipboardData!.getData('text/plain');
+    if (textData) return textPasteParse(input, ev, textData);
   }
 
   export function cleanEmpty(input: HTMLElement) {
