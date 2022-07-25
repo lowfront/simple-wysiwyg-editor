@@ -263,8 +263,6 @@ namespace Transform {
   }
 
   // FIXME: 복사된 텍스트에 포함된 링크 자동 변환
-  // FIXME: 연속 붙여넣기시 작동하지 않음
-  // FIXME: text/plain 파서 추가
   export function pasteTransform(input: HTMLElement, ev: ClipboardEvent) {
     ev.preventDefault();
 
