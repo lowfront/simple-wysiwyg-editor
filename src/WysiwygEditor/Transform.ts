@@ -173,33 +173,33 @@ namespace Transform {
       Editor.focus(anchorNode, anchorOffset);
     }
   }
+  
+  type PasteStackItem =
+  | {
+    type: 'text',
+    node: Node;
+    i: boolean;
+    u: boolean;
+    b: boolean;
+    block: boolean;
+    color: string;
+  } 
+  | {
+    type: 'group',
+    node: Node;
+    i: boolean;
+    u: boolean;
+    b: boolean;
+    block: boolean;
+    color: string;
+  };  
 
-  function htmlPasteParse(input: HTMLElement, ev: ClipboardEvent, htmlData: string) {
+  function htmlPasteParse(htmlData: string) {
     const START_FRAGMENT = '<!--StartFragment-->';
     const END_FRAGMENT = '<!--EndFragment-->';
     
     const blockTags = ['DIV', 'P', 'SECTION', 'MAIN', 'ARTICLE', 'BR'];
-  
-    type PasteStackItem =
-    | {
-      type: 'text',
-      node: Node;
-      i: boolean;
-      u: boolean;
-      b: boolean;
-      block: boolean;
-      color: string;
-    } 
-    | {
-      type: 'group',
-      node: Node;
-      i: boolean;
-      u: boolean;
-      b: boolean;
-      block: boolean;
-      color: string;
-    };  
-  
+
     function nodeToStackItem(node: Node, parentStackItem: Partial<PasteStackItem> = {}) {
       const block = blockTags.includes((node as HTMLElement).tagName);
     
@@ -242,7 +242,39 @@ namespace Transform {
         stack.unshift(...items);
       }
     }
-    console.log(result);
+
+    return result;
+  }
+
+  function textPasteParse(textData: string) {
+    const result = textData.split('\n').map(str => {
+      return [{
+        type: 'text' as 'text',
+        node: document.createTextNode(str),
+        i: false,
+        u: false,
+        b: false,
+        block: false,
+        color: 'black',
+      }];
+    });
+
+    return result;
+  }
+
+  // FIXME: 복사된 텍스트에 포함된 링크 자동 변환
+  // FIXME: 연속 붙여넣기시 작동하지 않음
+  // FIXME: text/plain 파서 추가
+  export function pasteTransform(input: HTMLElement, ev: ClipboardEvent) {
+    ev.preventDefault();
+
+    let result: PasteStackItem[][] = [];
+    
+    const htmlData = ev.clipboardData!.getData('text/html');
+    if (htmlData) result = htmlPasteParse(htmlData);
+
+    const textData = ev.clipboardData!.getData('text/plain');
+    if (textData) result = textPasteParse(textData);
 
     if (!result.length) return;
 
@@ -294,23 +326,6 @@ namespace Transform {
       }
       Editor.deepFocus(targetParagraph, deepFocusOffset);
     }
-  }
-
-  function textPasteParse(input: HTMLElement, ev: ClipboardEvent, textData: string) {
-
-  }
-
-  // FIXME: 복사된 텍스트에 포함된 링크 자동 변환
-  // FIXME: 연속 붙여넣기시 작동하지 않음
-  // FIXME: text/plain 파서 추가
-  export function pasteTransform(input: HTMLElement, ev: ClipboardEvent) {
-    ev.preventDefault();
-
-    const htmlData = ev.clipboardData!.getData('text/html');
-    if (htmlData) return htmlPasteParse(input, ev, htmlData);
-
-    const textData = ev.clipboardData!.getData('text/plain');
-    if (textData) return textPasteParse(input, ev, textData);
   }
 
   export function cleanEmpty(input: HTMLElement) {
